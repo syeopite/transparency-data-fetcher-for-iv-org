@@ -1,0 +1,13 @@
+name: "Transparency report data fetcher for iv-org"
+description: "Fetches data for generating transparency reports"
+inputs:
+  github-token:
+    description: 'GitHub access token. Needs permission to view the iv-org/invidious repo and create PRs for iv-org/transparency'
+    default: '${{ github.token }}'
+    required: true
+outputs:
+  fetched-btc-bounty-data:
+    description: "Fetched bounty/btc data for usage in generating the transparency report "
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
