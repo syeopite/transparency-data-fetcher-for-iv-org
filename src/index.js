@@ -7,8 +7,18 @@ let time_to_fetch = null
 if (!time_to_fetch) {
     time_to_fetch = new Date()
     time_to_fetch.setUTCDate(1);
-    // time_to_fetch = date.getMonth() + 1;
 }
+
+// We use month ranges of 0 - 11
+// as we want to query the previous month for GH
+let month = time_to_fetch.getUTCMonth()
+
+// But obviously a 0th month doesn't work
+// thus we'll go ahead and set the month to 1 
+if (month == 0) {
+    month = 1
+}
+
 
 async function fetch_btc_transaction_info() {
     return new Promise((resolve, reject) => { 
@@ -45,8 +55,8 @@ async function fetch_bounty_information() {
     const queryString = (
         "repo:iv-org/invidious " +
         "label:bounty:paid " + 
-        `merged:${time_to_fetch.getUTCFullYear()}-${('0' + time_to_fetch.getUTCMonth()).slice(-2)}-01..` + // Remove -1 later
-        `${time_to_fetch.getUTCFullYear()}-${('0' + (time_to_fetch.getUTCMonth() + 1)).slice(-2)}-01` // Add + 1 later
+        `merged:${time_to_fetch.getUTCFullYear()}-${('0' + month).slice(-2)}-01..` + // Remove -1 later
+        `${time_to_fetch.getUTCFullYear()}-${('0' + (month + 1)).slice(-2)}-01` // Add + 1 later
     );
 
     console.log(queryString)
@@ -101,10 +111,15 @@ async function fetch_bounty_information() {
    for (let transaction of transactions) {
     occurrence = new Date(transaction.status.block_time * 1000)
     if (occurrence.getUTCFullYear() != time_to_fetch.getUTCFullYear()) {
-        break;
+        continue;
     }
-    else if (occurrence.getUTCMonth() != time_to_fetch.getUTCMonth()) {
-        break;
+
+    // We're using the 0-11 month attribute as a lazy way to refer to the previous month.
+    // However, this fails when trying to compare two dates that both uses 0-11
+    // Since they'll think that they both refer to the same month which is obviously not the case
+    // August != July. 
+    else if ((occurrence.getUTCMonth() + 1) != month) {
+        continue;
     }
 
     transaction.vout.filter((i) => {
